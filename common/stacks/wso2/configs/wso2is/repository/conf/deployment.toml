@@ -1,0 +1,94 @@
+[server]
+hostname = "iam.kra.go.ke"
+node_ip = "127.0.0.1"
+base_path = "https://$ref{server.hostname}:${carbon.management.port}"
+
+[super_admin]
+username = "admin"
+password = "8Lq6GhfynY"
+create_admin_account = true
+
+[user_store]
+type = "database_unique_id"
+
+[database.identity_db]
+type = "postgre"
+hostname = "127.0.0.1"
+name = "identity_db"
+username = "postgres"
+password = "root"
+port = "5432"
+
+[database.shared_db]
+type = "postgre"
+hostname = "127.0.0.1"
+name = "shared_db"
+username = "postgres"
+password = "root"
+port = "5432"
+
+[database.user]
+type = "postgre"
+hostname = "127.0.0.1"
+name = "shared_db"
+username = "postgres"
+password = "root"
+port = "5432"
+
+[realm_manager]
+data_source = "WSO2USER_DB"
+
+[bps_database.config]
+url = "jdbc:postgresql://127.0.0.1:5432/bps_db"
+username = "postgres"
+password = "root"
+driver = "org.postgresql.Driver"
+
+[keystore.primary]
+file_name = "wso2carbon.jks"
+password = "wso2carbon"
+
+[truststore]
+file_name="client-truststore.jks"
+password="wso2carbon"
+type="JKS"
+
+[account_recovery.endpoint.auth]
+hash= "66cd9688a2ae068244ea01e70f0e230f5623b7fa4cdecb65070a09ec06452262"
+
+[identity.auth_framework.endpoint]
+app_password= "dashboard"
+
+[transport.https.properties]
+proxyPort="443"
+
+[fido.trusted]
+origins=["https://iam.kra.go.ke"]
+
+[authentication.authenticator.fido.parameters]
+app_id="https://iam.kra.go.ke"
+
+[identity_mgt.analytics_login_data_publisher]
+enable=true
+
+[identity_mgt.analytics_session_data_publisher] 
+enable=true
+
+[analytics]
+publish_password_grant_logins=true
+
+[cors]
+allowed_origins = [
+    "https://iam.kra.go.ke"
+]
+supported_methods = [
+    "GET",
+    "HEAD",
+    "POST",
+    "OPTIONS",
+]
+exposed_headers = [ "Location" ]
+
+
+[config_data]
+path = "/_system/is_as_km/config"

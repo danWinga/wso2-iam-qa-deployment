@@ -1,0 +1,4 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<jenkins.model.JenkinsLocationConfiguration>
+  <jenkinsUrl>https://jenkins.cicd.kra.go.ke/</jenkinsUrl>
+</jenkins.model.JenkinsLocationConfiguration>

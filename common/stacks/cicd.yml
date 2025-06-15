@@ -1,0 +1,164 @@
+version: "3.3"
+
+services:
+
+  nexus:
+    image: sonatype/nexus3
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.worker == true
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 1G
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-net"
+        - "traefik.http.routers.nexus-docker1.entrypoints=https"
+        - "traefik.http.routers.nexus-docker1.rule=(PathPrefix(`/v2/{any:.+}/blobs/`,`/v1/{any:.+}/blobs/`) && Method(`POST`,`PUT`,`DELETE`,`PATCH`,`HEAD`)) && Host(`nexus.cicd.kra.go.ke`)"
+        - "traefik.http.routers.nexus-docker1.service=nexus-docker1@docker"
+        - "traefik.http.routers.nexus-docker1.tls=true"
+        - "traefik.http.routers.nexus-docker2.entrypoints=https"
+        - "traefik.http.routers.nexus-docker2.rule=(PathPrefix(`/v2/{any:.+}/blobs/`,`/v1/{any:.+}/blobs/`) && Method(`GET`)) && Host(`nexus.cicd.kra.go.ke`)"
+        - "traefik.http.routers.nexus-docker2.service=nexus-docker2@docker"
+        - "traefik.http.routers.nexus-docker2.tls=true"
+        - "traefik.http.routers.nexus-docker3.entrypoints=https"
+        - "traefik.http.routers.nexus-docker3.rule=(PathPrefix(`/v2`,`/v1`) && Method(`POST`,`PUT`,`DELETE`,`PATCH`)) && Host(`nexus.cicd.kra.go.ke`)"
+        - "traefik.http.routers.nexus-docker3.service=nexus-docker3@docker"
+        - "traefik.http.routers.nexus-docker3.tls=true"
+        - "traefik.http.routers.nexus-docker4.entrypoints=https"
+        - "traefik.http.routers.nexus-docker4.rule=(PathPrefix(`/v2`,`/v1`) && Method(`GET`,`HEAD`)) && Host(`nexus.cicd.kra.go.ke`)"
+        - "traefik.http.routers.nexus-docker4.service=nexus-docker4@docker"
+        - "traefik.http.routers.nexus-docker4.tls=true"
+        - "traefik.http.routers.nexus.entrypoints=https"
+        - "traefik.http.routers.nexus.rule=Host(`nexus.cicd.kra.go.ke`)"
+        - "traefik.http.routers.nexus.service=nexus@docker"
+        - "traefik.http.routers.nexus.tls=true"
+        - "traefik.http.services.nexus-docker1.loadbalancer.server.port=8085"
+        - "traefik.http.services.nexus-docker2.loadbalancer.server.port=8086"
+        - "traefik.http.services.nexus-docker3.loadbalancer.server.port=8085"
+        - "traefik.http.services.nexus-docker4.loadbalancer.server.port=8086"
+        - "traefik.http.services.nexus.loadbalancer.server.port=8081"
+    networks:
+      - cicd-net
+      - traefik-net
+    volumes:
+      - /home/danwinga/Documents/projects/kra-qa/common/nexus_data:/nexus-data
+
+  jenkins:
+    image: cicd/jenkins:local
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.worker == true
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 1G
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-net"
+        - "traefik.http.routers.jenkins-https.rule=Host(`jenkins.cicd.kra.go.ke`)"
+        - "traefik.http.routers.jenkins-https.entrypoints=https"
+        - "traefik.http.routers.jenkins-https.service=jenkins-https"
+        - "traefik.http.routers.jenkins-https.tls=true"
+        - "traefik.http.services.jenkins-https.loadbalancer.server.port=8080"
+        - "traefik.http.services.jenkins-https.loadbalancer.server.scheme=http"
+    user: root
+    networks:
+      - cicd-net
+      - traefik-net
+    volumes:
+      - /home/danwinga/Documents/projects/kra-qa/common/jenkins_home:/var/jenkins_home
+      - /home/danwinga/Documents/projects/kra-qa/common/jenkins_m2_home:/root/.m2
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/danwinga/Documents/projects/kra-qa/common/jenkins_wso2_updates:/root/.wso2-updates
+  jenkins-workspace:
+    image: httpd:2.4
+    secrets:
+      - source: httpd_auth_users
+        target: /usr/local/apache2/.htpasswd
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.worker == true
+      resources:
+        limits:
+          memory: 1G
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-net"
+        - "traefik.http.routers.jenkins-workspace.rule=Host(`jenkins-workspace.cicd.kra.go.ke`)"
+        - "traefik.http.routers.jenkins-workspace.entrypoints=https"
+        - "traefik.http.routers.jenkins-workspace.service=jenkins-workspace"
+        - "traefik.http.routers.jenkins-workspace.tls=true"
+        - "traefik.http.services.jenkins-workspace.loadbalancer.server.port=80"
+        - "traefik.http.services.jenkins-workspace.loadbalancer.server.scheme=http"
+    networks:
+      - traefik-net
+    volumes:
+      - /home/danwinga/Documents/projects/kra-qa/common/jenkins_workspace:/opt/jenkins_workspace/
+    configs:
+      - source: httpd-conf
+        target: /usr/local/apache2/conf/httpd.conf
+      - source: httpd-vhost-conf
+        target: /usr/local/apache2/conf/extra/httpd-vhosts.conf
+
+  gitlab:
+    image: gitlab/gitlab-ce:13.10.2-ce.0
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.gitlab == true
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik-net"
+        - "traefik.http.routers.gitlab-https.rule=Host(`gitlab.cicd.kra.go.ke`)"
+        - "traefik.http.routers.gitlab-https.entrypoints=https"
+        - "traefik.http.routers.gitlab-https.service=gitlab-https"
+        - "traefik.http.routers.gitlab-https.tls=true"
+        - "traefik.http.services.gitlab-https.loadbalancer.server.port=80"
+        - "traefik.http.services.gitlab-https.loadbalancer.server.scheme=http"
+        - "traefik.tcp.routers.gitlab-ssh.rule=HostSNI(`*`)"
+        - "traefik.tcp.routers.gitlab-ssh.entrypoints=ssh"
+        - "traefik.tcp.routers.gitlab-ssh.service=gitlab-ssh"
+        - "traefik.tcp.services.gitlab-ssh.loadbalancer.server.port=22"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['gitlab_ssh_host'] = 'gitlab.cicd.kra.go.ke'
+        prometheus_monitoring['enable'] = false
+    networks:
+      - cicd-net
+      - traefik-net
+    volumes:
+      - /home/danwinga/Documents/projects/kra-qa/common/gitlab/gitlab-config:/etc/gitlab
+      - /home/danwinga/Documents/projects/kra-qa/common/gitlab/gitlab-data:/var/opt/gitlab
+      - /home/danwinga/Documents/projects/kra-qa/common/gitlab/gitlab-logs:/var/log/gitlab
+
+configs:
+  httpd-conf:
+    external: true
+  httpd-vhost-conf:
+    external: true
+
+secrets:
+  httpd_auth_users:
+    external: true
+
+networks:
+  cicd-net:
+    external: true
+  traefik-net:
+    external: true
