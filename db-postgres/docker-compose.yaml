@@ -1,0 +1,78 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: shared_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  shared_db:
+    image: postgres:latest
+    container_name: shared_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: shared_db
+    depends_on:
+      - postgres
+
+  user_db:
+    image: postgres:latest
+    container_name: user_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: user_db
+    depends_on:
+      - postgres
+
+  identity_db:
+    image: postgres:latest
+    container_name: identity_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: identity_db
+    depends_on:
+      - postgres
+
+  bps_db:
+    image: postgres:latest
+    container_name: bps_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: bps_db
+    depends_on:
+      - postgres
+
+  analytics_db:
+    image: postgres:latest
+    container_name: analytics_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: analytics_db
+    depends_on:
+      - postgres
+
+  geolocation_db:
+    image: postgres:latest
+    container_name: geolocation_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: geolocation_db
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+
