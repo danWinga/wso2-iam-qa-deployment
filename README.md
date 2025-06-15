@@ -71,11 +71,35 @@ Git Push → Jenkins CI Build → Image Publish → Swarm Deploy
 
 ---
 
-## 📸 Login UI Customization
-Customized corporate branding via:
-- `kra-corporate-image-visual-atributes-for-login/`
-- Theme assets: Logo, CSS, Branding JSON
-- MFA visual hints added for improved UX
+## 🖼️ Login Page Customization
+
+The login page was customized to reflect KRA branding and enhance user experience:
+
+![Custom Login Page](ae2f473d-222a-431a-8fd8-879587dc613a.png)
+
+**Location**: `kra-corporate-image-visual-atributes-for-login/`
+
+### Customizations Applied:
+- ✅ Custom **iDentity** logo branding
+- ✅ Kenya Revenue Authority footer/logo
+- ✅ UI theming (red/white/gray color scheme)
+- ✅ Enhanced "Forgot Password" flow visibility
+- ✅ "Remember Me" checkbox enabled
+- ✅ Font adjustments for mobile compatibility
+
+### How to Apply Custom Theme in WSO2 IS:
+1. Copy customized theme files to: 
+   ```
+   <WSO2_HOME>/repository/deployment/server/webapps/authenticationendpoint/
+   ```
+2. Clear browser cache and restart WSO2 server:
+   ```bash
+   sh wso2server.sh restart
+   ```
+3. Access login UI at:
+   ```
+   https://identity.kra.co.ke/authenticationendpoint/login.do
+   ```
 
 ---
 
